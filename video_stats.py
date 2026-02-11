@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import date
 
 import os
 from dotenv import load_dotenv
@@ -82,13 +83,12 @@ def extract_video_data(video_ids):
     def batch_list(video_id_lst,batch_size):
 
         for video_id in range(0,len(video_id_lst),batch_size):
-            yield video_id_lst[video_id : video_id + batch_size]    
+            yield video_id_lst[video_id : video_id + batch_size]  
     
     try: 
 
         for batch in batch_list(video_ids, maxResults):
             video_ids_str = ",".join(batch)
-
             url = f"https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&part=snippet&part=statistics&id={video_ids_str}&key={API_KEY}"
 
             response = requests.get(url)
@@ -120,7 +120,13 @@ def extract_video_data(video_ids):
     except requests.exceptions.RequestException as e:     
         raise e
 
+def save_to_json(extracted_data):
+    file_path = f"./data/YT_data_{date.today()}.json"
+    with open(file_path,"w",encoding="utf-8") as json_outfile:
+        json.dump(extracted_data, json_outfile, indent= 4, ensure_ascii=False)
+
 if __name__ == "__main__":
     playlistId = get_playlist_id()
     video_ids = get_video_ids(playlistId)
-    print(extract_video_data(video_ids))
+    video_data = extract_video_data(video_ids)
+    save_to_json(video_data)
